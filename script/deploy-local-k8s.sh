@@ -26,8 +26,8 @@ function package_and_deploy() {
     ${HELM_PATH} init --upgrade
     sleep 15
     find ${CHARTS_PATH} -name "*.tgz" -delete
-    ${HELM_PATH} package ${CHARTS_PATH}/url-shortener -d ${CHARTS_PATH}
-    ${HELM_PATH} upgrade -i ${RELEASE_NAME} $(find ${CHARTS_PATH} -name "*.tgz")
+    ${HELM_PATH} package -u ${CHARTS_PATH}/url-shortener -d ${CHARTS_PATH}
+    ${HELM_PATH} upgrade -i ${RELEASE_NAME} $(find ${CHARTS_PATH} -maxdepth 1 -name "*.tgz")
 }
 
 get_kubectl
