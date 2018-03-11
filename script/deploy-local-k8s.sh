@@ -8,6 +8,7 @@ HELM_PATH=${BIN_DIRECTORY}/helm
 KUBECTL_PATH="${BIN_DIRECTORY}/kubectl"
 CHARTS_PATH="${SCRIPT_DIR}/../helm/charts"
 RELEASE_NAME="example"
+
 function get_kubectl() {
     mkdir -p ${BIN_DIRECTORY}
     $KUBECTL_PATH version || curl -Lo $KUBECTL_PATH https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/amd64/kubectl && chmod +x $KUBECTL_PATH
