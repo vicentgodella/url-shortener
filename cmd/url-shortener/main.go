@@ -34,7 +34,11 @@ func main() {
 
 	var s urlshortener.Service
 	{
-		s = urlshortener.NewService(*makeFakeLoad)
+		var err error
+		s, err = urlshortener.NewService(*makeFakeLoad)
+		if err != nil {
+			logger.Log("fatal", err)
+		}
 		s = urlshortener.NewLoggingService(logger, s)
 	}
 
