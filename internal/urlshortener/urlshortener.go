@@ -53,13 +53,15 @@ func (s *shortURLService) generateFakeLoad(span string) error {
 }
 
 // NewService gets you a shiny shortURLService!
-func NewService(makeFakeLoad bool) Service {
-	return &shortURLService{
-		urlDatabase: &shortURLInMemoryRepository{
-			shortURLRepository: map[string]*shortURL{},
-		},
-		makeFakeLoad: makeFakeLoad,
+func NewService(makeFakeLoad bool) (Service, error) {
+	storage, err := newInMemory()
+	if err != nil {
+		return nil, err
 	}
+	return &shortURLService{
+		urlDatabase:  storage,
+		makeFakeLoad: makeFakeLoad,
+	}, nil
 }
 
 // Login to the system.
