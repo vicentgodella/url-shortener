@@ -30,7 +30,7 @@ version:
 	@echo "\trevision:\t" ${REV}
 	@echo "\tversion:\t" ${VERSION}
 
-ci: tools buildonly generate-package
+ci: buildonly generate-package
 	@echo "CI BUILD..."
 
 generate-package:
