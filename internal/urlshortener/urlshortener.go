@@ -5,10 +5,12 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	valid "github.com/asaskevich/govalidator"
+	"github.com/friends-of-scalability/url-shortener/cmd/config"
 )
 
 // User is a representation of a User. Dah.
@@ -53,14 +55,27 @@ func (s *shortURLService) generateFakeLoad(span string) error {
 }
 
 // NewService gets you a shiny shortURLService!
-func NewService(makeFakeLoad bool) (Service, error) {
-	storage, err := newInMemory()
-	if err != nil {
-		return nil, err
+func NewService(cfg *config.Config) (Service, error) {
+	var store shortURLStorage
+	var err error
+	switch cfg.StorageType {
+	case "inmemory":
+		store, err = newInMemory()
+	case "postgres":
+		store, err = newPostgresStorage(
+			cfg.Postgresql.Host,
+			strconv.Itoa(cfg.Postgresql.Port),
+			cfg.Postgresql.User,
+			cfg.Postgresql.Password,
+			"urlshortener")
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return &shortURLService{
-		urlDatabase:  storage,
-		makeFakeLoad: makeFakeLoad,
+		urlDatabase:  store,
+		makeFakeLoad: cfg.EnableFakeLoad,
 	}, nil
 }
 

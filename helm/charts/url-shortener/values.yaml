@@ -59,7 +59,7 @@ postgresql:
   ## Default: postgres
   postgresUser: urlshortener
   ## Default: random 10 character string
-  # postgresPassword:
+  postgresPassword: blabla
 
   ## Create a database
   ## Default: the postgres user

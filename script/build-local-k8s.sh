@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 MINIKUBE_BIN_DIRECTORY="$PWD/script/bin"
 MINIKUBE_PATH="${MINIKUBE_BIN_DIRECTORY}/minikube"
 
