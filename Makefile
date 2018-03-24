@@ -164,8 +164,6 @@ generate:
 	@echo "GO GENERATE..."
 	@go generate $$(go list ./... | grep -v /vendor/)
 
-
-
 # vet runs the Go source code static analysis tool `vet` to find
 # any common errors.
 vet:

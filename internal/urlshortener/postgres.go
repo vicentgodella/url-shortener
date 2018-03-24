@@ -51,7 +51,11 @@ func (u *shortURLPostgresRepository) ByURL(URL string) (*shortURL, error) {
 		&item.ID,
 		&item.URL,
 		&item.VisitsCounter)
+
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errURLNotFound
+		}
 		return nil, err
 	}
 	return &item, nil
