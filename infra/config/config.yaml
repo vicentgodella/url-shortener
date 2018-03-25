@@ -1,3 +1,0 @@
-project_code: {{ environment_variable.PROJECT_CODE }}
-
-region: eu-west-1
