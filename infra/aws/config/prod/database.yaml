@@ -4,8 +4,8 @@ parameters:
   DBName: urlshortener
   DBAllocatedStorage: "20"
   DBInstanceClass: "db.t2.micro"
-  DBUser: test
-  DBPassword: DatabasePasswordProd
+  DBUser: urlshortener
+  DBPassword: {{ var.ssmdbpassword }}
   VPC: {{ var.vpc}}
   Subnet0: {{ var.subnet0 }}
   Subnet1: {{ var.subnet1 }}

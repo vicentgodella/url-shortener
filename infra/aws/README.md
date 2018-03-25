@@ -1,4 +1,4 @@
-First, you need to create a SSM parameter with Database password: 
+First, you need to create a SSM parameter with Database password:
 
 `./create-parameter.sh <name> <type> <value>`
 
@@ -13,5 +13,4 @@ Export an environment variable with your project_code. For example:
 
 After that, you can create cloudformation stacks with the following command (inside infra directory):
 
-`sceptre --var "vpc=<vpc-id>" --var "subnet0=<subnet0-id>" --var="subnet1=<subnet1-id>" --var="subnet2=<subnet2-id>" --var="studentId='<studentId>'" launch-env prod`
-  
+`sceptre --var "vpc=<vpc-id>" --var "ssmdbpassword=DatabasePasswordProd" --var "subnet0=<subnet0-id>" --var="subnet1=<subnet1-id>" --var="subnet2=<subnet2-id>" --var="studentId='<studentId>'" launch-env prod`
