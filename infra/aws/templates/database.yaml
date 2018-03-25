@@ -47,7 +47,6 @@ Resources:
   DBEC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: Open database for access
       GroupDescription: Open database for access
       SecurityGroupIngress:
       - IpProtocol: tcp
