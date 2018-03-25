@@ -23,16 +23,7 @@ Resources:
   LoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
-      Name:
-        "Fn::Join": [
-          "-",
-          [
-            "urlshortener",
-            {
-              "Ref": "StudentId"
-            }
-          ]
-        ]
+      Name: !Join [ "-", [ "urlshortener" ,!Ref StudentId] ]
       Scheme: "internet-facing"
       SecurityGroups:
        - Ref: "LoadBalancerSecurityGroup"
@@ -63,16 +54,7 @@ Resources:
       Protocol: "HTTP"
       VpcId:
         Ref: "VPC"
-      Name:
-        "Fn::Join": [
-          "",
-          [
-            "urlshortener",
-            {
-              "Ref": "StudentId"
-            }
-          ]
-        ]
+      Name: !Join [ "", [ "urlshortener" ,!Ref StudentId] ]
   LoadBalancerSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -113,15 +95,16 @@ Resources:
                -
                   "sts:AssumeRole"
       Path: "/"
-      Policies: []
-#       -
-#          PolicyDocument:
-#            Statement:
-#             -
-#                Effect: "Allow"
-#                Action: "*"
-#                Resource: "*"
-#            Version: "2012-10-17"
+      Policies:
+       -
+          PolicyName: "AllowGetParameters"
+          PolicyDocument:
+            Statement:
+             -
+                Effect: "Allow"
+                Action: "ssm:GetParameter"
+                Resource: !Join [ "/", [ "arn:aws:ssm:eu-west-1:046987341530:parameter" ,!Ref StudentId, "prod", "*"] ]
+            Version: "2012-10-17"
     Type: "AWS::IAM::Role"
   WebServerInstanceProfile:
     Properties:
@@ -135,29 +118,8 @@ Resources:
     Type: "AWS::Route53::RecordSet"
     Properties:
       Comment: "Load Balancer"
-      HostedZoneName:
-        "Fn::Join": [
-          "",
-          [
-            {
-              "Ref": "Domain"
-            },
-            "."
-          ]
-        ]
-      Name:
-        "Fn::Join": [
-          ".",
-          [
-            "www",
-            {
-              "Ref": "StudentId"
-            },
-            {
-              "Ref": "Domain"
-            }
-          ]
-        ]
+      HostedZoneName: !Join [ "", [ !Ref Domain, "."] ]
+      Name: !Join [ ".", [ !Ref StudentId, !Ref Domain ] ]
       ResourceRecords:
        - "Fn::GetAtt": [ "LoadBalancer", "DNSName" ]
       TTL: 60
