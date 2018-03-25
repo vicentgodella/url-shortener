@@ -18,6 +18,7 @@ Parameters:
   DBPassword:
     Description: "Password for database"
     Type: "AWS::SSM::Parameter::Value<String>"
+    NoEcho: "true"
   VPC:
     Description: Choose which VPC this server should be deployed to
     Type: AWS::EC2::VPC::Id
