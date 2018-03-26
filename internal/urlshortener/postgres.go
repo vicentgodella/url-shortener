@@ -20,7 +20,6 @@ func newPostgresStorage(host, port, user, password, dbName string) (shortURLStor
 	// Connect postgres
 	connect := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbName)
-
 	db, err := sql.Open("postgres", connect)
 	if err != nil {
 		return nil, err
@@ -45,7 +44,7 @@ func newPostgresStorage(host, port, user, password, dbName string) (shortURLStor
 
 func (u *shortURLPostgresRepository) IsHealthy() (bool, error) {
 	// Send a ping to make sure the database connection is alive.
-	if err := u.db.Ping(); err != nil {
+	if _, err := u.db.Exec("SELECT 1"); err != nil {
 		return false, err
 	}
 
