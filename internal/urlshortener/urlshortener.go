@@ -71,6 +71,8 @@ func NewService(cfg *config.Config) (Service, error) {
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf("invalid storage expected inmemory or postgres got %s", cfg.StorageType)
 	}
 
 	return &shortURLService{
@@ -85,7 +87,6 @@ func (s *shortURLService) Shortify(URL string) (mapping *shortURL, err error) {
 	if !valid.IsURL(URL) {
 		return nil, errMalformedURL
 	}
-
 	_, err = s.urlDatabase.ByURL(URL)
 	// URL not found is an expected error, otherwise return err
 	if err != errURLNotFound && err != nil {
