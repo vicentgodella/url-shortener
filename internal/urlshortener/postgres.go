@@ -43,6 +43,15 @@ func newPostgresStorage(host, port, user, password, dbName string) (shortURLStor
 	return &shortURLPostgresRepository{db}, nil
 }
 
+func (u *shortURLPostgresRepository) IsHealthy() (bool, error) {
+	// Send a ping to make sure the database connection is alive.
+	if err := u.db.Ping(); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // ByShortURL finds and URL in our databse.
 func (u *shortURLPostgresRepository) ByURL(URL string) (*shortURL, error) {
 

@@ -5,4 +5,5 @@ type shortURLStorage interface {
 	Save(Item *shortURL) (*shortURL, error)
 	ByID(id string) (*shortURL, error)
 	ByURL(URL string) (*shortURL, error)
+	IsHealthy() (bool, error)
 }

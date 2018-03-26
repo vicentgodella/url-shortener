@@ -26,6 +26,8 @@ func (u *shortURLInMemoryRepository) ByURL(URL string) (*shortURL, error) {
 	return nil, errURLNotFound
 }
 
+func (u *shortURLInMemoryRepository) IsHealthy() (bool, error) { return true, nil }
+
 func (u *shortURLInMemoryRepository) ByID(id string) (*shortURL, error) {
 
 	key, err := base62.Decode(id)

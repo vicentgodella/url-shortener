@@ -11,13 +11,13 @@ EC2_REGION=$(curl --silent http://169.254.169.254/latest/dynamic/instance-identi
 STUDENT=$(curl -s http://169.254.169.254/latest/meta-data/iam/info | jq .InstanceProfileArn | egrep -o 'student-\w+' | cut -f2 -d'-')
 
 # Trying to retrieve parameters from the EC2 Parameter Store
-export URLSHORTENER_POSTGRESQL_HOST=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/host  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_POSTGRESQL_USER=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/user  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_POSTGRESQL_PASSWORD=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/port  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_POSTGRESQL_PORT=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/port  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_FAKELOAD=$(aws ssm get-parameters --names /"$STUDENT"/prod/fakeload  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_STORAGE=$(aws ssm get-parameters --names /"$STUDENT"/prod/storage  --with-decryption --region $EC2_REGION --output text 2>&1)
-export URLSHORTENER_HTTP_ADDR=$(aws ssm get-parameters --names /"$STUDENT"/prod/http/addr  --with-decryption --region $EC2_REGION --output text 2>&1)
+export URLSHORTENER_POSTGRESQL_HOST=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/host  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_POSTGRESQL_USER=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/user  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_POSTGRESQL_PASSWORD=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/port  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_POSTGRESQL_PORT=$(aws ssm get-parameters --names /"$STUDENT"/prod/db/port  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_FAKELOAD=$(aws ssm get-parameters --names /"$STUDENT"/prod/fakeload  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_STORAGE=$(aws ssm get-parameters --names /"$STUDENT"/prod/storage  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
+export URLSHORTENER_HTTP_ADDR=$(aws ssm get-parameters --names /"$STUDENT"/prod/http/addr  --with-decryption --region $EC2_REGION --output json | jq .Parameters[0].Value)
 if [[ -z "${URLSHORTENER_HTTP_ADDR// }" ]];then
     unset URLSHORTENER_HTTP_ADDR
 elif [[ -z "${URLSHORTENER_STORAGE// }" ]];then
