@@ -2,8 +2,8 @@
 
 set -e
 
-NAME=url-shortener
-DESCRIPTION="Friends of scalability url shortener"
+NAME=url-shortener-$1
+DESCRIPTION="Friends of scalability $NAME"
 WORKING_PATH="$(dirname ${0})"
 
 # Set dummy version, if not set already (e.g. outside of CI)
@@ -18,7 +18,7 @@ PKG_BUILD_DIR="/tmp/rpm.${RANDOM}"; mkdir "${PKG_BUILD_DIR}"
 mkdir -p ${PKG_BUILD_DIR}/opt/url-shortener/bin/
 
 cp bin/urlshortener ${PKG_BUILD_DIR}/opt/url-shortener/bin/url-shortener
-rsync -av script/deb/ ${PKG_BUILD_DIR}/
+rsync -av script/deb/$1 ${PKG_BUILD_DIR}/
 
 pushd ${WORKING_PATH}
 fpm \
