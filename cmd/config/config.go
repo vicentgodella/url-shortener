@@ -4,6 +4,7 @@ type Config struct {
 	HTTPAddress    string
 	EnableFakeLoad bool
 	Postgresql     PostgresqlConfig
+	Role           string
 	StorageType    string
 }
 

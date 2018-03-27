@@ -27,6 +27,7 @@ func bindEnvironmentVariables() {
 	viper.BindEnv("postgresql.port")
 	viper.BindEnv("postgresql.user")
 	viper.BindEnv("postgresql.password")
+	viper.BindEnv("role")
 }
 
 func bindFlags(rootCmd *cobra.Command, c *config.Config) error {
@@ -37,6 +38,8 @@ func bindFlags(rootCmd *cobra.Command, c *config.Config) error {
 	rootCmd.PersistentFlags().IntVar(&c.Postgresql.Port, "postgresql.port", 5432, "Postgres port")
 	rootCmd.PersistentFlags().StringVar(&c.Postgresql.User, "postgresql.user", "", "Postgres user")
 	rootCmd.PersistentFlags().StringVar(&c.Postgresql.Password, "postgresql.password", "", "Postgres password")
+	rootCmd.PersistentFlags().StringVar(&c.Role, "role", "full", "which role will do this instance full|apigateway|resolver|shortener")
+
 	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
 		return err
 	}
@@ -44,6 +47,7 @@ func bindFlags(rootCmd *cobra.Command, c *config.Config) error {
 	c.HTTPAddress = viper.GetString("http.addr")
 	c.EnableFakeLoad = viper.GetBool("fakeload")
 	c.StorageType = viper.GetString("storage")
+	c.Role = viper.GetString("role")
 	c.Postgresql.Host = viper.GetString("postgresql.host")
 	c.Postgresql.Port = viper.GetInt("postgresql.port")
 	c.Postgresql.User = viper.GetString("postgresql.user")
@@ -105,7 +109,17 @@ func main() {
 
 	var h http.Handler
 	{
+		// switch cfg.Role {
+		// case "full":
+		// case "resolver":
+		// 	h = urlshortener.MakeResolverHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		// case "shortener":
+		// 	h = urlshortener.MakeShortenerHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		// case "apigateway":
+		// 	h = urlshortener.MakeAPIGWHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		// }
 		h = urlshortener.MakeHandler(ctx, s, log.With(logger, "component", "HTTP"))
+
 	}
 
 	errs := make(chan error)

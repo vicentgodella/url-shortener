@@ -36,7 +36,6 @@ ci: buildonly generate-package
 generate-package:
 	@echo "GENERATE PACKAGE..."
 	bash script/build-package.sh resolver
-	bash script/build-package.sh shortener
 
 tools:
 	@echo "GO TOOLS installation..."

@@ -104,6 +104,14 @@ Resources:
                 Effect: "Allow"
                 Action: "ssm:Get*"
                 Resource: !Join [ "/", [ "arn:aws:ssm:eu-west-1:046987341530:parameter" ,!Ref StudentId, "prod", "*"] ]
+             -
+                Effect: "Allow"
+                Action: "servicediscovery:*"
+                Resource: "*"
+             -
+                Effect: "Allow"
+                Action: "route53:*"
+                Resource: "*"
             Version: "2012-10-17"
     Type: "AWS::IAM::Role"
   WebServerInstanceProfile:

@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Service Discovery"
+Parameters:
+  Name:
+    Description: "some identifier for the zone"
+    Type: "String"
+  VPC:
+    Description: Choose which VPC this server should be deployed to
+    Type: AWS::EC2::VPC::Id
+
+Resources:
+  PrivateNamespace:
+    Type: "AWS::ServiceDiscovery::PrivateDnsNamespace"
+    Properties:
+      Description: !Join [ "", ["the urlshortener private namespace for ", !Ref Name]]
+      Vpc: !Ref VPC
+      Name: !Join [ "", [!Ref Name,".aws"]]
+  ResolverService:
+    Type: "AWS::ServiceDiscovery::Service"
+    Properties:
+      Description: !Join [ "", ["The resolver service for ", !Ref Name]]
+      DnsConfig:
+        DnsRecords:
+          -
+            Type: "SRV"
+            TTL: "30"
+        NamespaceId: !Ref PrivateNamespace
+      Name: resolver
+  ShortenerService:
+    Type: "AWS::ServiceDiscovery::Service"
+    Properties:
+      Description: !Join [ "", ["The shortener service for ", !Ref Name]]
+      DnsConfig:
+        DnsRecords:
+          -
+            Type: "SRV"
+            TTL: "30"
+        NamespaceId: !Ref PrivateNamespace
+      Name: shortener
+Outputs:
+  ResolverServiceId:
+    Description: "Resolver Service ID"
+    Value: !Ref ResolverService
+  ShortenerServiceId:
+    Description: "Shortener Service ID"
+    Value: !Ref ShortenerService
+  NamespaceId:
+    Description: "Namespace Service ID"
+    Value: !Ref PrivateNamespace
