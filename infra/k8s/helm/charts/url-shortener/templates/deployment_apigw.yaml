@@ -35,15 +35,15 @@ spec:
             - name: URLSHORTENER_ROLE
               value: "apigateway"
           ports:
-            - containerPort: {{ .Values.service.internalPort }}
+            - containerPort: {{ .Values.service.apigateway.internalPort }}
           livenessProbe:
             httpGet:
               path: /healthz
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.apigateway.internalPort }}
           readinessProbe:
             httpGet:
               path: /healthz
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.apigateway.internalPort }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}
