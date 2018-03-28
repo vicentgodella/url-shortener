@@ -4,7 +4,7 @@
 replicaCount: 1
 image:
   repository: url-shortener/urlshortener
-  tag: 0.0.1
+  tag: latest
   pullPolicy: IfNotPresent
 service:
   apigateway:

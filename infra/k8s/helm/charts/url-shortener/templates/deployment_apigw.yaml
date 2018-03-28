@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: "{{ template "url-shortener.fullname" . }}-apigw"
+  name: "{{ template "url-shortener.fullname" . }}-apigateway"
   labels:
     app: "{{ template "url-shortener.name" . }}-apigw"
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       labels:
-        app: "{{ template "url-shortener.name" . }}-apigw"
+        app: "{{ template "url-shortener.name" . }}-apigateway"
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
@@ -36,14 +36,7 @@ spec:
               value: "apigateway"
           ports:
             - containerPort: {{ .Values.service.apigateway.internalPort }}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: {{ .Values.service.apigateway.internalPort }}
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: {{ .Values.service.apigateway.internalPort }}
+
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}

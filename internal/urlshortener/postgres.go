@@ -80,6 +80,12 @@ func (u *shortURLPostgresRepository) ByID(id string) (*shortURL, error) {
 	err = u.db.QueryRow("SELECT url, count FROM shortener where uid=$1 limit 1", dbID).
 		Scan(&item.URL, &item.VisitsCounter)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errURLNotFound
+		}
+		return nil, err
+	}
+	if err != nil {
 		return nil, err
 	}
 	item.ID = dbID

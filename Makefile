@@ -6,7 +6,7 @@ GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 REV?=$$(git rev-parse --short HEAD)
 BRANCH?=$$(git rev-parse --abbrev-ref HEAD)
 BUILDFILES?=$$(find bin -mindepth 1 -maxdepth 1 -type f)
-VERSION?="0.0.1"
+VERSION?="0.0.2"
 MAIN_PATH="./cmd/url-shortener/"
 SCRIPT_PATH="./script"
 DOCKER_REPO?="${REPONAME}/${APPNAME}"
@@ -66,8 +66,8 @@ docker:
 		echo "Please run crosscompile before running docker command." ; \
 		exit 1 ; \
 	fi
-	@eval $$(${SCRIPT_PATH}/bin/minikube docker-env ); \
-		docker build -t ${DOCKER_REPO}:${VERSION} -q --build-arg CONT_IMG_VER=${VERSION} --build-arg BINARY=bin/linux-amd64/${APPNAME} . ; \
+	eval $$(${SCRIPT_PATH}/bin/minikube docker-env ); \
+		docker build -t ${DOCKER_REPO}:${VERSION} -q --build-arg CONT_IMG_VER=${VERSION} . ; \
 		docker tag ${DOCKER_REPO}:${VERSION} ${DOCKER_REPO}:latest; \
 		eval $$(${SCRIPT_PATH}/bin/minikube docker-env -u )
 

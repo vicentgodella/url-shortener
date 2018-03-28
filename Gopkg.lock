@@ -18,6 +18,10 @@
   packages = [
     "endpoint",
     "log",
+    "sd",
+    "sd/dnssrv",
+    "sd/internal/instance",
+    "sd/lb",
     "transport/http"
   ]
   revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
@@ -170,6 +174,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "523c72f0aef801273426f66a538475ca335a18c39435a2250bfdcc08d32a3cb1"
+  inputs-digest = "8091c38118c0ea8dcc81b531c82c855702e6eb006a2b4eeba614cf4769d969ad"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -109,17 +109,16 @@ func main() {
 
 	var h http.Handler
 	{
-		// switch cfg.Role {
-		// case "full":
-		// case "resolver":
-		// 	h = urlshortener.MakeResolverHandler(ctx, s, log.With(logger, "component", "HTTP"))
-		// case "shortener":
-		// 	h = urlshortener.MakeShortenerHandler(ctx, s, log.With(logger, "component", "HTTP"))
-		// case "apigateway":
-		// 	h = urlshortener.MakeAPIGWHandler(ctx, s, log.With(logger, "component", "HTTP"))
-		// }
-		h = urlshortener.MakeHandler(ctx, s, log.With(logger, "component", "HTTP"))
-
+		switch cfg.Role {
+		case "full":
+			h = urlshortener.MakeHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		case "resolver":
+			h = urlshortener.MakeResolverHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		case "shortener":
+			h = urlshortener.MakeShortenerHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		case "apigateway":
+			h = urlshortener.MakeAPIGWHandler(ctx, s, log.With(logger, "component", "HTTP"))
+		}
 	}
 
 	errs := make(chan error)
