@@ -32,8 +32,8 @@ func newPostgresStorage(host, port, user, password, dbName string) (shortURLStor
 	}
 
 	// Create table if not exists
-	strQuery := "CREATE TABLE IF NOT EXISTS shortener (uid serial NOT NULL, url VARCHAR not NULL UNIQUE, " +
-		"count INTEGER DEFAULT 0);"
+	strQuery := "CREATE TABLE IF NOT EXISTS shortener (uid BIGSERIAL NOT NULL, url VARCHAR not NULL UNIQUE, " +
+		"count BIGINTEGER DEFAULT 0);"
 
 	_, err = db.Exec(strQuery)
 	if err != nil {

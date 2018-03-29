@@ -58,18 +58,10 @@ func MakeResolverHandler(ctx context.Context, us Service, logger kitlog.Logger) 
 func encodeRedirectResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	if e, ok := response.(errorer); ok && e.error() != nil {
 		encodeError(ctx, e.error(), w)
-		return e.error()
+		return nil
 	}
 	if e, ok := response.(redirectResponse); ok && e.error() == nil {
-		encoder := json.NewEncoder(w)
-		err := encoder.Encode(e)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return err
-		}
-	} else {
-		encodeError(ctx, errMalformedURL, w)
-		return errMalformedURL
+		return json.NewEncoder(w).Encode(e)
 	}
 	return nil
 
