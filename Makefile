@@ -86,7 +86,7 @@ deploy-in-k8s:
 	@echo "deploying in k8s"
 	@./script/deploy-local-k8s.sh
 
-run-k8s: build-in-k8s deploy-in-k8s
+run-k8s: docker-clean build-in-k8s deploy-in-k8s
 
 tar-everything:
 	@echo "tar-everything..."
@@ -163,12 +163,6 @@ generate:
 	@echo "GO GENERATE..."
 	@go generate $$(go list ./... | grep -v /vendor/)
 
-clean:
-	@echo "cleaning files"
-	@rm -rf bin/*
-	@eval $$(${SCRIPT_PATH}/bin/minikube docker-env ); \
-		docker rmi -f ${DOCKER_REPO}:${VERSION} ${DOCKER_REPO}:latest; \
-		eval $$(${SCRIPT_PATH}/bin/minikube docker-env -u )
 
 
 # vet runs the Go source code static analysis tool `vet` to find
@@ -186,9 +180,18 @@ fmt:
 	@echo "GO FMT..."
 	@gofmt -w -s $(GOFMT_FILES)
 
+
+docker-clean:
+	@echo "cleaning docker files"
+	@eval $$(${SCRIPT_PATH}/bin/minikube docker-env ); \
+		docker rmi -f ${DOCKER_REPO}:${VERSION} ${DOCKER_REPO}:latest; \
+		eval $$(${SCRIPT_PATH}/bin/minikube docker-env -u )
+
 clean:
+	@echo "cleaning files"
 	rm -rf bin/
+	@$(MAKE) docker-clean
 	${SCRIPT_PATH}/bin/minikube stop
 	${SCRIPT_PATH}/bin/minikube delete
 
-.PHONY: tools default docker buildonly clean
+.PHONY: tools default docker buildonly clean docker-clean

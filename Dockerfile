@@ -16,7 +16,7 @@ RUN \
   apk del g++ make curl && \
   rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*
 RUN apk add --update --no-cache ca-certificates
-RUN apk add bind-tools curl
+RUN apk add bind-tools curl tcpdump
 EXPOSE 8080
 ENTRYPOINT [ "/bin/urlshortener" ]
 CMD [""]

@@ -11,8 +11,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 )
 
-// MakeHandler returns a handler for the urlshortener service.
-func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Handler {
+func MakeResolverHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Handler {
 	r := mux.NewRouter()
 
 	opts := []kithttp.ServerOption{
@@ -36,12 +35,6 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 		encodeResponse,
 		opts...,
 	)
-	URLShortifyHandler := kithttp.NewServer(
-		makeURLShortifyEndpoint(us),
-		decodeURLShortenerRequest,
-		encodeResponse,
-		opts...,
-	)
 	URLRedirectHandler := kithttp.NewServer(
 		makeURLRedirectEndpoint(us),
 		decodeURLRedirectRequest,
@@ -55,7 +48,6 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 		opts...,
 	)
 
-	r.Handle("/", URLShortifyHandler).Methods("POST")
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 	r.Handle("/{shortURL}", URLRedirectHandler).Methods("GET")
 	r.Handle("/info/{shortURL}", URLInfoHandler).Methods("GET")
@@ -63,31 +55,48 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 	return r
 }
 
-func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+func encodeRedirectResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	if e, ok := response.(errorer); ok && e.error() != nil {
 		encodeError(ctx, e.error(), w)
-		return nil
+		return e.error()
 	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
+	if e, ok := response.(redirectResponse); ok && e.error() == nil {
+		encoder := json.NewEncoder(w)
+		err := encoder.Encode(e)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return err
+		}
+	} else {
+		encodeError(ctx, errMalformedURL, w)
+		return errMalformedURL
+	}
+	return nil
+
 }
 
-type errorer interface {
-	error() error
-}
-
-// encode errors from business-logic
-func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	switch err {
-	case errURLNotFound:
-		w.WriteHeader(http.StatusNotFound)
-	case errMalformedURL:
-		w.WriteHeader(http.StatusBadRequest)
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
+func decodeURLInfoResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
+	var response infoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
-	})
+	return response, nil
+}
+func decodeURLRedirectRequest(c context.Context, r *http.Request) (interface{}, error) {
+
+	shURL := mux.Vars(r)
+	if val, ok := shURL["shortURL"]; ok {
+		//do something here
+		return redirectRequest{id: val}, nil
+	}
+	return nil, errMalformedURL
+
+}
+func decodeURLInfoRequest(c context.Context, r *http.Request) (interface{}, error) {
+	shURL := mux.Vars(r)
+	if val, ok := shURL["shortURL"]; ok {
+		//do something here
+		return redirectRequest{id: val}, nil
+	}
+	return nil, errMalformedURL
 }
