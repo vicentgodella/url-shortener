@@ -17,16 +17,21 @@ function get_kubectl() {
 
 function get_helm() {
     mkdir -p ${BIN_DIRECTORY}
-    curl --output /tmp/helm.tar.gz https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz
-    tar -zxvf /tmp/helm.tar.gz -C /tmp \
-    && mv /tmp/linux-amd64/helm ${HELM_PATH} \
-    && rm -rf /tmp/linux-amd64
+    if [[ ! -f /tmp/helm-${HELM_VERSION}.tar.gz ]];then
+        curl --output /tmp/helm-${HELM_VERSION}.tar.gz https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz
+        mkdir /tmp/helm
+        tar -zxvf /tmp/helm-${HELM_VERSION}.tar.gz -C /tmp/helm
+    fi
+    cp /tmp/helm/linux-amd64/helm ${HELM_PATH}
 
 }
 
 function package_and_deploy() {
-    ${HELM_PATH} init --upgrade
-    sleep 15
+    ${KUBECTL_PATH} get deployment tiller-deploy --namespace kube-system &> /dev/null
+    if [[ $? -ne 0 ]];then
+        ${HELM_PATH} init --upgrade
+        sleep 15
+    fi
     find ${CHARTS_PATH} -name "*.tgz" -delete
     ${HELM_PATH} package -u ${CHARTS_PATH}/url-shortener -d ${CHARTS_PATH}
     ${HELM_PATH} upgrade -i ${RELEASE_NAME} $(find ${CHARTS_PATH} -maxdepth 1 -name "*.tgz")

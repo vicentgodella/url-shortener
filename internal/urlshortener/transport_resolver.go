@@ -88,7 +88,7 @@ func decodeURLInfoRequest(c context.Context, r *http.Request) (interface{}, erro
 	shURL := mux.Vars(r)
 	if val, ok := shURL["shortURL"]; ok {
 		//do something here
-		return redirectRequest{id: val}, nil
+		return infoRequest{id: val}, nil
 	}
 	return nil, errMalformedURL
 }

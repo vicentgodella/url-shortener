@@ -120,5 +120,6 @@ func (s *shortURLService) Resolve(shortURL string) (mapping *shortURL, err error
 		}
 	}
 	URL.VisitsCounter++
+	s.urlDatabase.Save(URL)
 	return URL, nil
 }

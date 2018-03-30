@@ -66,12 +66,12 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger) htt
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	r.Handle("/info/{shortURL}", kithttp.NewServer(retry, decodeURLInfoRequest, encodeResponse)).Methods("GET")
 
-	// instancer = dnssrv.NewInstancer("example-url-shortener-shortener.default.svc.cluster.local", 30*time.Millisecond, logger)
-	// factory = shortenerFactory(ctx, "POST", "/")
-	// endpointer = sd.NewEndpointer(instancer, factory, logger)
-	// balancer = lb.NewRoundRobin(endpointer)
-	// retry = lb.Retry(3, 500*time.Millisecond, balancer)
-	// r.Handle("/", kithttp.NewServer(retry, decodeURLShortenerRequest, encodeResponse)).Methods("POST")
+	instancer = dnssrv.NewInstancer("example-url-shortener-shortener.default.svc.cluster.local", 30*time.Millisecond, logger)
+	factory = endpointFactory(ctx, "shortener", "POST", logger)
+	endpointer = sd.NewEndpointer(instancer, factory, logger)
+	balancer = lb.NewRoundRobin(endpointer)
+	retry = lb.Retry(3, 500*time.Millisecond, balancer)
+	r.Handle("/", kithttp.NewServer(retry, decodeURLShortenerRequest, encodeResponse)).Methods("POST")
 
 	return r
 }
@@ -99,7 +99,8 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		case "resolver":
 			enc, dec = encodeAPIGWRedirectRequest, decodeAPIGWRedirectResponse
 		case "info":
-			enc, dec = encodeHTTPGenericRequest, decodeURLInfoResponse
+			tgt.Path = "/info"
+			enc, dec = encodeAPIGWInfoRequest, decodeURLInfoResponse
 		case "shortener":
 			enc, dec = encodeHTTPGenericRequest, decodeURLShortenerResponse
 		default:
@@ -111,7 +112,10 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 
 func encodeAPIGWRedirectRequest(ctx context.Context, req *http.Request, request interface{}) error {
 
-	originalRequest := request.(redirectRequest)
+	originalRequest, ok := request.(redirectRequest)
+	if !ok {
+		return fmt.Errorf("Cannot cast request to an redirectRequest")
+	}
 	url := url.URL{
 		Scheme:  req.URL.Scheme,
 		Host:    req.URL.Host,
@@ -124,13 +128,15 @@ func encodeAPIGWRedirectRequest(ctx context.Context, req *http.Request, request 
 
 }
 func encodeAPIGWInfoRequest(ctx context.Context, req *http.Request, request interface{}) error {
-
-	originalRequest := request.(infoRequest)
+	originalRequest, ok := request.(infoRequest)
+	if !ok {
+		return fmt.Errorf("Cannot cast request to an inforequest")
+	}
 	url := url.URL{
 		Scheme:  req.URL.Scheme,
 		Host:    req.URL.Host,
-		Path:    "/" + originalRequest.id,
-		RawPath: "/" + url.QueryEscape(originalRequest.id),
+		Path:    "/info/" + originalRequest.id,
+		RawPath: "/info/" + url.QueryEscape(originalRequest.id),
 	}
 	req.URL = &url
 
@@ -162,6 +168,7 @@ func debugResponse(resp *http.Response) {
 }
 
 func encodeHTTPGenericRequest(_ context.Context, r *http.Request, request interface{}) error {
+	debugRequest(r)
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(request); err != nil {
 		return err
