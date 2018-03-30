@@ -52,7 +52,7 @@ func makeURLShortifyEndpoint(s Service) endpoint.Endpoint {
 			return shortenerResponse{Err: err.Error()}, nil
 		}
 		host := ctx.Value(contextKeyHTTPAddress).(string)
-		return shortenerResponse{ShortURL: host + base62.Encode(m.ID), URL: m.URL, Err: err.Error()}, nil
+		return shortenerResponse{ShortURL: host + base62.Encode(m.ID), URL: m.URL}, nil
 	}
 }
 

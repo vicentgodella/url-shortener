@@ -187,11 +187,14 @@ docker-clean:
 		docker rmi -f ${DOCKER_REPO}:${VERSION} ${DOCKER_REPO}:latest; \
 		eval $$(${SCRIPT_PATH}/bin/minikube docker-env -u )
 
+destroy:
+	@$(MAKE) clean
+	${SCRIPT_PATH}/bin/minikube stop
+	${SCRIPT_PATH}/bin/minikube delete
+
 clean:
 	@echo "cleaning files"
 	rm -rf bin/
 	@$(MAKE) docker-clean
-	${SCRIPT_PATH}/bin/minikube stop
-	${SCRIPT_PATH}/bin/minikube delete
 
-.PHONY: tools default docker buildonly clean docker-clean
+.PHONY: tools default docker buildonly clean docker-clean destroy
