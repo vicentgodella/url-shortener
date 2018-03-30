@@ -52,21 +52,21 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger) htt
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 
 	var retry endpoint.Endpoint
-	instancer := dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 30*time.Millisecond, logger)
+	instancer := dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 200*time.Millisecond, logger)
 	factory := endpointFactory(ctx, "resolver", "GET", logger)
 	endpointer := sd.NewEndpointer(instancer, factory, logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	r.Handle("/{shortURL}", kithttp.NewServer(retry, decodeURLRedirectRequest, encodeRedirectResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 30*time.Millisecond, logger)
+	instancer = dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 200*time.Millisecond, logger)
 	factory = endpointFactory(ctx, "info", "GET", logger)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	r.Handle("/info/{shortURL}", kithttp.NewServer(retry, decodeURLInfoRequest, encodeResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer("example-url-shortener-shortener.default.svc.cluster.local", 30*time.Millisecond, logger)
+	instancer = dnssrv.NewInstancer("example-url-shortener-shortener.default.svc.cluster.local", 200*time.Millisecond, logger)
 	factory = endpointFactory(ctx, "shortener", "POST", logger)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
@@ -166,7 +166,6 @@ func debugRequest(req *http.Request) {
 	fmt.Printf("%q\n", dump)
 }
 func debugResponse(resp *http.Response) {
-	fmt.Printf("REDIRECT RESPONSE!!!\n")
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		log.Fatal(err)
