@@ -1,11 +1,14 @@
 package config
 
 type Config struct {
-	HTTPAddress    string
-	EnableFakeLoad bool
-	Postgresql     PostgresqlConfig
-	Role           string
-	StorageType    string
+	HTTPAddress      string
+	ExposedHost      string
+	ExposedPort      string
+	EnableFakeLoad   bool
+	Postgresql       PostgresqlConfig
+	ServiceDiscovery ServiceDiscoveryConfig
+	Role             string
+	StorageType      string
 }
 
 type PostgresqlConfig struct {
@@ -13,4 +16,9 @@ type PostgresqlConfig struct {
 	Port     int
 	User     string
 	Password string
+}
+
+type ServiceDiscoveryConfig struct {
+	Resolver  string
+	Shortener string
 }

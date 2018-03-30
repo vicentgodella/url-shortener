@@ -7,7 +7,7 @@ BIN_DIRECTORY="${SCRIPT_DIR}/bin"
 HELM_PATH=${BIN_DIRECTORY}/helm
 KUBECTL_PATH="${BIN_DIRECTORY}/kubectl"
 CHARTS_PATH="${SCRIPT_DIR}/../infra/k8s/helm/charts"
-RELEASE_NAME="example"
+RELEASE_NAME="fabian"
 
 
 function get_kubectl() {

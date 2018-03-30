@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/friends-of-scalability/url-shortener/cmd/config"
 	endpoint "github.com/go-kit/kit/endpoint"
 	sd "github.com/go-kit/kit/sd"
 
@@ -25,7 +26,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 )
 
-func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Handler {
+func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg *config.Config) http.Handler {
 	r := mux.NewRouter()
 
 	opts := []kithttp.ServerOption{
@@ -52,22 +53,22 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger) htt
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 
 	var retry endpoint.Endpoint
-	instancer := dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 200*time.Millisecond, logger)
-	factory := endpointFactory(ctx, "resolver", "GET", logger)
+	instancer := dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
+	factory := endpointFactory(ctx, "resolver", "GET", logger, cfg)
 	endpointer := sd.NewEndpointer(instancer, factory, logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	r.Handle("/{shortURL}", kithttp.NewServer(retry, decodeURLRedirectRequest, encodeRedirectResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer("example-url-shortener-resolver.default.svc.cluster.local", 200*time.Millisecond, logger)
-	factory = endpointFactory(ctx, "info", "GET", logger)
+	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
+	factory = endpointFactory(ctx, "info", "GET", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	r.Handle("/info/{shortURL}", kithttp.NewServer(retry, decodeURLInfoRequest, encodeResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer("example-url-shortener-shortener.default.svc.cluster.local", 200*time.Millisecond, logger)
-	factory = endpointFactory(ctx, "shortener", "POST", logger)
+	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, logger)
+	factory = endpointFactory(ctx, "shortener", "POST", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
@@ -76,7 +77,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger) htt
 	return r
 }
 
-func endpointFactory(ctx context.Context, action, method string, logger kitlog.Logger) sd.Factory {
+func endpointFactory(ctx context.Context, action, method string, logger kitlog.Logger, cfg *config.Config) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		s := strings.Split(instance, ":")
 		// removing port since service discovery is getting a wrong one
@@ -85,7 +86,7 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		}
 		instance = s[0]
 		if !strings.HasPrefix(instance, "http") {
-			instance = "http://" + instance + ":8080"
+			instance = "http://" + instance + ":" + cfg.ExposedPort
 		}
 		tgt, err := url.Parse(instance)
 
@@ -153,6 +154,7 @@ func encodeAPIGWInfoRequest(ctx context.Context, req *http.Request, request inte
 func decodeAPIGWRedirectResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
 
 	var response redirectResponse
+	debugResponse(resp)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}
