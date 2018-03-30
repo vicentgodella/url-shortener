@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-kit/kit/sd/lb"
+
 	"github.com/gorilla/mux"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -84,6 +86,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case errMalformedURL:
 		w.WriteHeader(http.StatusBadRequest)
+	case lb.ErrNoEndpoints:
+		w.WriteHeader(http.StatusGatewayTimeout)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

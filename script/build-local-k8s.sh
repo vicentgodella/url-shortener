@@ -18,6 +18,7 @@ function check_or_start_cluster() {
         $MINIKUBE_PATH start --kubernetes-version v1.9.0
         $MINIKUBE_PATH addons enable ingress
         $MINIKUBE_PATH addons enable registry
+        $MINIKUBE_PATH addons enable heapster
     elif [ $? -eq 4 ];then
         echo "something went wrong in the cluster, check up logs"
     elif [ $? -eq 7 ];then

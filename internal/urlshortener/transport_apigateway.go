@@ -80,6 +80,9 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		s := strings.Split(instance, ":")
 		// removing port since service discovery is getting a wrong one
+		if len(s) == 0 || len(s) > 2 {
+			return nil, nil, fmt.Errorf("Got wrong address from service discovery, something went wrong")
+		}
 		instance = s[0]
 		if !strings.HasPrefix(instance, "http") {
 			instance = "http://" + instance + ":8080"
@@ -89,7 +92,7 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		if err != nil {
 			return nil, nil, err
 		}
-		logger.Log("transport", "HTTP", "apigateway request", tgt.String(), " method ", method)
+		logger.Log("TYPE", "apigateway request", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
 
 		var (
 			enc kithttp.EncodeRequestFunc
@@ -106,6 +109,10 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		default:
 			return nil, nil, fmt.Errorf("unknown resolver action %q", action)
 		}
+		kithttp.ClientBefore(func(ctx context.Context, resp *http.Request) context.Context {
+			logger.Log("TYPE", "HTTP CLIENT", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
+			return ctx
+		})
 		return kithttp.NewClient(method, tgt, enc, dec).Endpoint(), nil, nil
 	}
 }
@@ -168,7 +175,6 @@ func debugResponse(resp *http.Response) {
 }
 
 func encodeHTTPGenericRequest(_ context.Context, r *http.Request, request interface{}) error {
-	debugRequest(r)
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(request); err != nil {
 		return err

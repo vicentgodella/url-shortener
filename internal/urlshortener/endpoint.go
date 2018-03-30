@@ -6,6 +6,7 @@ import (
 
 	"github.com/friends-of-scalability/url-shortener/pkg"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/sd/lb"
 )
 
 type shortenerRequest struct {
@@ -104,6 +105,8 @@ func dealWithErrors(errorReason string) error {
 			return errMalformedURL
 		case errURLNotFound.Error():
 			return errURLNotFound
+		case lb.ErrNoEndpoints.Error():
+			return lb.ErrNoEndpoints
 		default:
 			return fmt.Errorf(errorReason)
 		}

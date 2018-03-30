@@ -89,7 +89,6 @@ func main() {
 		if err != nil {
 			logger.Log("fatal", "config", "error", err)
 		}
-		fmt.Printf("%+v\n", cfg)
 	}
 	var ctx context.Context
 	{
@@ -129,7 +128,7 @@ func main() {
 	}()
 
 	go func() {
-		logger.Log("transport", "HTTP", "addr", cfg.HTTPAddress)
+		logger.Log("transport", "HTTP", "addr", cfg.HTTPAddress, "STORAGE", cfg.StorageType, "FAKELOAD", cfg.EnableFakeLoad)
 		errs <- http.ListenAndServe(cfg.HTTPAddress, h)
 
 	}()
