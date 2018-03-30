@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -x
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-KUBE_LATEST_VERSION="v1.9.3"
+KUBE_LATEST_VERSION="v1.8.0"
 HELM_VERSION="v2.8.2"
 BIN_DIRECTORY="${SCRIPT_DIR}/bin"
 HELM_PATH=${BIN_DIRECTORY}/helm

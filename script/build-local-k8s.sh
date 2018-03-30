@@ -15,7 +15,7 @@ function check_or_start_cluster() {
         echo "minikube is already up and running"
     elif [ $? -eq 1 ];then
         echo "minikube is not running, starting up the cluster"
-        $MINIKUBE_PATH start --kubernetes-version v1.9.0
+        $MINIKUBE_PATH start --kubernetes-version v1.8.0
         $MINIKUBE_PATH addons enable ingress
         $MINIKUBE_PATH addons enable registry
         $MINIKUBE_PATH addons enable heapster

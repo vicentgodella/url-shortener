@@ -36,7 +36,14 @@ spec:
               value: "apigateway"
           ports:
             - containerPort: {{ .Values.service.apigateway.internalPort }}
-
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.service.apigateway.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.service.apigateway.internalPort }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}
