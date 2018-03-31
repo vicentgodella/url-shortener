@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/friends-of-scalability/url-shortener/cmd/config"
 	endpoint "github.com/go-kit/kit/endpoint"
 	sd "github.com/go-kit/kit/sd"
@@ -51,6 +52,9 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 		opts...,
 	)
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
+	hystrix.ConfigureCommand("shortener Request", hystrix.CommandConfig{Timeout: 100000})
+	hystrix.ConfigureCommand("resolver Request", hystrix.CommandConfig{Timeout: 1000})
+	hystrix.ConfigureCommand("info Request", hystrix.CommandConfig{Timeout: 1000})
 
 	var retry endpoint.Endpoint
 	instancer := dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
@@ -58,21 +62,27 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	endpointer := sd.NewEndpointer(instancer, factory, logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
-	r.Handle("/{shortURL}", kithttp.NewServer(retry, decodeURLRedirectRequest, encodeRedirectResponse)).Methods("GET")
+	resolverEndpoint := Hystrix("resolver Request",
+		"Service currently unavailable", logger)(retry)
+	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeRedirectResponse)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
 	factory = endpointFactory(ctx, "info", "GET", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
-	r.Handle("/info/{shortURL}", kithttp.NewServer(retry, decodeURLInfoRequest, encodeResponse)).Methods("GET")
+	infoEndpoint := Hystrix("info Request",
+		"Service currently unavailable", logger)(retry)
+	r.Handle("/info/{shortURL}", kithttp.NewServer(infoEndpoint, decodeURLInfoRequest, encodeResponse)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, logger)
 	factory = endpointFactory(ctx, "shortener", "POST", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
-	r.Handle("/", kithttp.NewServer(retry, decodeURLShortenerRequest, encodeResponse)).Methods("POST")
+	shortenerEndpoint := Hystrix("shortener Request",
+		"Service currently unavailable", logger)(retry)
+	r.Handle("/", kithttp.NewServer(shortenerEndpoint, decodeURLShortenerRequest, encodeResponse)).Methods("POST")
 
 	return r
 }
@@ -93,7 +103,7 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		if err != nil {
 			return nil, nil, err
 		}
-		logger.Log("TYPE", "apigateway request", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
+		//logger.Log("TYPE", "apigateway request", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
 
 		var (
 			enc kithttp.EncodeRequestFunc
@@ -155,6 +165,7 @@ func decodeAPIGWRedirectResponse(ctx context.Context, resp *http.Response) (inte
 
 	var response redirectResponse
 	debugResponse(resp)
+	log.Printf("%+v", ctx)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}
@@ -165,14 +176,14 @@ func debugRequest(req *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%q\n", dump)
+	log.Printf("%q\n", dump)
 }
 func debugResponse(resp *http.Response) {
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%q", dump)
+	log.Printf("%q", dump)
 }
 
 func encodeHTTPGenericRequest(_ context.Context, r *http.Request, request interface{}) error {

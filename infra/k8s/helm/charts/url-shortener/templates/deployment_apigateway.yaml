@@ -36,6 +36,7 @@ spec:
               value: "apigateway"
           ports:
             - containerPort: {{ .Values.service.apigateway.internalPort }}
+            - containerPort: 9000
           livenessProbe:
             httpGet:
               path: /healthz

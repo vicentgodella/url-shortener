@@ -19,7 +19,7 @@ default: quick
 
 lazy: version fmt lint vet test
 
-quick: version fmt lint vet buildonly
+quick: version fmt lint vet docker-build
 
 vendor:
 	@dep ensure

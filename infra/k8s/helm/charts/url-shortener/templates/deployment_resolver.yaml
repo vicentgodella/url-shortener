@@ -36,6 +36,7 @@ spec:
               value: "resolver"
           ports:
             - containerPort: {{ .Values.service.resolver.internalPort }}
+            - containerPort: 9000
           livenessProbe:
             httpGet:
               path: /healthz

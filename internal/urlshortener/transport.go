@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/go-kit/kit/sd/lb"
 
 	"github.com/gorilla/mux"
@@ -38,20 +39,32 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 		encodeResponse,
 		opts...,
 	)
+
+	hystrix.ConfigureCommand("shortener Request", hystrix.CommandConfig{Timeout: 1000})
+	hystrix.ConfigureCommand("resolver Request", hystrix.CommandConfig{Timeout: 1000})
+	hystrix.ConfigureCommand("info Request", hystrix.CommandConfig{Timeout: 1000})
+
+	shortenerEndpoint := Hystrix("shortener Request",
+		"Service currently unavailable", logger)(makeURLShortifyEndpoint(us))
+	resolverEndpoint := Hystrix("resolver Request",
+		"Service currently unavailable", logger)(makeURLRedirectEndpoint(us))
+	infoEndpoint := Hystrix("info Request",
+		"Service currently unavailable", logger)(makeURLInfoEndpoint(us))
+
 	URLShortifyHandler := kithttp.NewServer(
-		makeURLShortifyEndpoint(us),
+		shortenerEndpoint,
 		decodeURLShortenerRequest,
 		encodeResponse,
 		opts...,
 	)
 	URLRedirectHandler := kithttp.NewServer(
-		makeURLRedirectEndpoint(us),
+		resolverEndpoint,
 		decodeURLRedirectRequest,
 		encodeRedirectResponse,
 		opts...,
 	)
 	URLInfoHandler := kithttp.NewServer(
-		makeURLInfoEndpoint(us),
+		infoEndpoint,
 		decodeURLInfoRequest,
 		encodeResponse,
 		opts...,

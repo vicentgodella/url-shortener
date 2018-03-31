@@ -36,6 +36,7 @@ spec:
               value: "shortener"
           ports:
             - containerPort: {{ .Values.service.shortener.internalPort }}
+            - containerPort: 9000
           livenessProbe:
             httpGet:
               path: /healthz

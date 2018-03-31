@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/friends-of-scalability/url-shortener/cmd/config"
 	"github.com/friends-of-scalability/url-shortener/internal/urlshortener"
 	"github.com/go-kit/kit/log"
@@ -148,6 +149,13 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
+	go func() {
+		logger.Log("transport", "Hystrix Stream Server", "addr", ":9000", "STORAGE", cfg.StorageType, "FAKELOAD", cfg.EnableFakeLoad)
+
+		hystrixStreamHandler := hystrix.NewStreamHandler()
+		hystrixStreamHandler.Start()
+		errs <- http.ListenAndServe(":9000", hystrixStreamHandler)
+	}()
 	go func() {
 		logger.Log("transport", "HTTP", "addr", cfg.HTTPAddress, "STORAGE", cfg.StorageType, "FAKELOAD", cfg.EnableFakeLoad)
 		errs <- http.ListenAndServe(cfg.HTTPAddress, h)
