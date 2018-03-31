@@ -1,15 +1,10 @@
 package urlshortener
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -26,6 +21,14 @@ import (
 	"github.com/go-kit/kit/sd/lb"
 	kithttp "github.com/go-kit/kit/transport/http"
 )
+
+func getCurrentAddr(r *http.Request) string {
+	var scheme = "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return scheme + "://" + r.Host + "/"
+}
 
 func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg *config.Config) http.Handler {
 	r := mux.NewRouter()
@@ -64,7 +67,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	resolverEndpoint := Hystrix("resolver Request",
 		"Service currently unavailable", logger)(retry)
-	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeResponse)).Methods("GET")
+	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeRedirectResponse, opts...)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, kitlog.NewNopLogger())
 	factory = endpointFactory(ctx, "info", "GET", logger, cfg)
@@ -73,7 +76,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	infoEndpoint := Hystrix("info Request",
 		"Service currently unavailable", logger)(retry)
-	r.Handle("/info/{shortURL}", kithttp.NewServer(infoEndpoint, decodeURLInfoRequest, encodeResponse)).Methods("GET")
+	r.Handle("/info/{shortURL}", kithttp.NewServer(infoEndpoint, decodeURLInfoRequest, encodeResponse, opts...)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, kitlog.NewNopLogger())
 	factory = endpointFactory(ctx, "shortener", "POST", logger, cfg)
@@ -82,7 +85,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	shortenerEndpoint := Hystrix("shortener Request",
 		"Service currently unavailable", logger)(retry)
-	r.Handle("/", kithttp.NewServer(shortenerEndpoint, decodeURLShortenerRequest, encodeResponse)).Methods("POST")
+	r.Handle("/", kithttp.NewServer(shortenerEndpoint, decodeURLShortenerRequest, encodeResponse, opts...)).Methods("POST")
 
 	return r
 }
@@ -103,8 +106,6 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		if err != nil {
 			return nil, nil, err
 		}
-		//logger.Log("TYPE", "apigateway request", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
-
 		var (
 			enc kithttp.EncodeRequestFunc
 			dec kithttp.DecodeResponseFunc
@@ -120,11 +121,13 @@ func endpointFactory(ctx context.Context, action, method string, logger kitlog.L
 		default:
 			return nil, nil, fmt.Errorf("unknown resolver action %q", action)
 		}
-		kithttp.ClientBefore(func(ctx context.Context, resp *http.Request) context.Context {
-			logger.Log("TYPE", "HTTP CLIENT", "PATH", tgt.String(), "METHOD", method, "ACTION", action)
+		before := kithttp.ClientBefore(func(ctx context.Context, req *http.Request) context.Context {
+			logger.Log("TYPE", "HTTP CLIENT", "METHOD", method, "ACTION", action, "HOST", tgt.String(), "URI", req.RequestURI)
+			req.Header.Set("X-Forwarded-Host", ctx.Value(contextKeyHTTPAddress).(string))
 			return ctx
 		})
-		return kithttp.NewClient(method, tgt, enc, dec).Endpoint(), nil, nil
+
+		return kithttp.NewClient(method, tgt, enc, dec, before).Endpoint(), nil, nil
 	}
 }
 
@@ -141,7 +144,6 @@ func encodeAPIGWRedirectRequest(ctx context.Context, req *http.Request, request 
 		RawPath: "/" + url.QueryEscape(originalRequest.id),
 	}
 	req.URL = &url
-
 	return nil
 
 }
@@ -160,35 +162,4 @@ func encodeAPIGWInfoRequest(ctx context.Context, req *http.Request, request inte
 
 	return nil
 
-}
-func decodeAPIGWRedirectResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
-
-	var response redirectResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-func debugRequest(req *http.Request) {
-	dump, err := httputil.DumpRequest(req, true)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("%q\n", dump)
-}
-func debugResponse(resp *http.Response) {
-	dump, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("%q", dump)
-}
-
-func encodeHTTPGenericRequest(_ context.Context, r *http.Request, request interface{}) error {
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(request); err != nil {
-		return err
-	}
-	r.Body = ioutil.NopCloser(&buf)
-	return nil
 }

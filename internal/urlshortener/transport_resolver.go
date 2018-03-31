@@ -2,7 +2,6 @@ package urlshortener
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -22,6 +21,7 @@ func MakeResolverHandler(ctx context.Context, us Service, logger kitlog.Logger) 
 			if r.TLS != nil {
 				scheme = "https"
 			}
+			c = context.WithValue(c, contextKeyAPIGWHTTPAddress, r.Header.Get("X-Forwarded-Host"))
 			c = context.WithValue(c, contextKeyHTTPAddress, scheme+"://"+r.Host+"/")
 			return c
 		}),
@@ -53,42 +53,4 @@ func MakeResolverHandler(ctx context.Context, us Service, logger kitlog.Logger) 
 	r.Handle("/info/{shortURL}", URLInfoHandler).Methods("GET")
 
 	return r
-}
-
-func encodeRedirectResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	if e, ok := response.(errorer); ok && e.error() != nil {
-		encodeError(ctx, e.error(), w)
-		return nil
-	}
-	if e, ok := response.(redirectResponse); ok && e.error() == nil {
-		return json.NewEncoder(w).Encode(e)
-	}
-	return nil
-
-}
-
-func decodeURLInfoResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
-	var response infoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-func decodeURLRedirectRequest(c context.Context, r *http.Request) (interface{}, error) {
-
-	shURL := mux.Vars(r)
-	if val, ok := shURL["shortURL"]; ok {
-		//do something here
-		return redirectRequest{id: val}, nil
-	}
-	return nil, errMalformedURL
-
-}
-func decodeURLInfoRequest(c context.Context, r *http.Request) (interface{}, error) {
-	shURL := mux.Vars(r)
-	if val, ok := shURL["shortURL"]; ok {
-		//do something here
-		return infoRequest{id: val}, nil
-	}
-	return nil, errMalformedURL
 }

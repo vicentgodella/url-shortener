@@ -2,8 +2,6 @@ package urlshortener
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -23,6 +21,7 @@ func MakeShortenerHandler(ctx context.Context, us Service, logger kitlog.Logger)
 			if r.TLS != nil {
 				scheme = "https"
 			}
+			c = context.WithValue(c, contextKeyAPIGWHTTPAddress, r.Header.Get("X-Forwarded-Host"))
 			c = context.WithValue(c, contextKeyHTTPAddress, scheme+"://"+r.Host+"/")
 			return c
 		}),
@@ -46,28 +45,4 @@ func MakeShortenerHandler(ctx context.Context, us Service, logger kitlog.Logger)
 	r.Handle("/", URLShortifyHandler).Methods("POST")
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 	return r
-}
-
-func decodeURLShortenerResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
-	var response shortenerResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-func decodeURLShortenerRequest(c context.Context, r *http.Request) (interface{}, error) {
-	decoder := json.NewDecoder(r.Body)
-	var t shortURL
-	if !decoder.More() {
-		return nil, errors.New("Empty request, cannot shortify the emptiness")
-
-	}
-	err := decoder.Decode(&t)
-	if err != nil {
-		return nil, err
-	}
-	if t.URL == "" {
-		return nil, errors.New("Empty request, cannot shortify the emptiness")
-	}
-	return shortenerRequest{URL: t.URL}, nil
 }

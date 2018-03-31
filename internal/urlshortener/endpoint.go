@@ -57,7 +57,12 @@ func makeURLShortifyEndpoint(s Service) endpoint.Endpoint {
 		if err != nil {
 			return shortenerResponse{Err: err.Error()}, nil
 		}
-		host := ctx.Value(contextKeyHTTPAddress).(string)
+		var host string
+		if ctx.Value(contextKeyAPIGWHTTPAddress) != nil {
+			host = ctx.Value(contextKeyAPIGWHTTPAddress).(string)
+		} else {
+			host = ctx.Value(contextKeyHTTPAddress).(string)
+		}
 		return shortenerResponse{ShortURL: host + base62.Encode(m.ID), URL: m.URL}, nil
 	}
 }
@@ -80,7 +85,12 @@ func makeURLRedirectEndpoint(s Service) endpoint.Endpoint {
 		if err != nil {
 			return redirectResponse{Err: err.Error()}, nil
 		}
-		host := ctx.Value(contextKeyHTTPAddress).(string)
+		var host string
+		if ctx.Value(contextKeyAPIGWHTTPAddress) != nil {
+			host = ctx.Value(contextKeyAPIGWHTTPAddress).(string)
+		} else {
+			host = ctx.Value(contextKeyHTTPAddress).(string)
+		}
 		return redirectResponse{URL: m.URL, id: host + req.id}, nil
 	}
 }
@@ -92,7 +102,12 @@ func makeURLInfoEndpoint(s Service) endpoint.Endpoint {
 		if err != nil {
 			return infoResponse{Err: err.Error()}, nil
 		}
-		host := ctx.Value(contextKeyHTTPAddress).(string)
+		var host string
+		if ctx.Value(contextKeyAPIGWHTTPAddress) != nil {
+			host = ctx.Value(contextKeyAPIGWHTTPAddress).(string)
+		} else {
+			host = ctx.Value(contextKeyHTTPAddress).(string)
+		}
 		return infoResponse{URL: m.URL, ShortURL: host + req.id, Visits: m.VisitsCounter}, nil
 	}
 }
@@ -127,5 +142,5 @@ func doFallback(fallbackMessage fallbackResponse) error {
 	if strings.Contains(fallbackMessage.UpstreamError, "no endpoints available") {
 		return errFallbackFail
 	}
-	return nil
+	return errFallbackGracefully
 }

@@ -2,11 +2,9 @@ package urlshortener
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/go-kit/kit/sd/lb"
 
 	"github.com/gorilla/mux"
 
@@ -76,43 +74,4 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 	r.Handle("/info/{shortURL}", URLInfoHandler).Methods("GET")
 
 	return r
-}
-
-func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	if e, ok := response.(errorer); ok && e.error() != nil {
-		encodeError(ctx, e.error(), w)
-		return nil
-	}
-	if e, ok := response.(fallbacker); ok && e.fallback() != nil {
-		encodeError(ctx, e.fallback(), w)
-		return nil
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
-}
-
-type errorer interface {
-	error() error
-}
-
-type fallbacker interface {
-	fallback() error
-}
-
-// encode errors from business-logic
-func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	switch err {
-	case errURLNotFound:
-		w.WriteHeader(http.StatusNotFound)
-	case errMalformedURL:
-		w.WriteHeader(http.StatusBadRequest)
-	case lb.ErrNoEndpoints:
-		w.WriteHeader(http.StatusGatewayTimeout)
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
-	})
 }
