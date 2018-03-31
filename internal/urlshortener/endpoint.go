@@ -3,6 +3,7 @@ package urlshortener
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/friends-of-scalability/url-shortener/pkg"
 	"github.com/go-kit/kit/endpoint"
@@ -38,6 +39,10 @@ type infoResponse struct {
 	ShortURL string `json:"shortURL,omitempty"`
 	Visits   uint64 `json:"visitsCount,omitempty"`
 	Err      string `json:"error,omitempty"`
+}
+type fallbackResponse struct {
+	FallbackMessage string `json:"fallback,omitempty"`
+	UpstreamError   string `json:"upstreamError"`
 }
 
 type healthzResponse struct {
@@ -98,6 +103,10 @@ func (r shortenerResponse) error() error { return dealWithErrors(r.Err) }
 
 func (r healthzResponse) error() error { return dealWithErrors(r.Err) }
 
+func (r infoResponse) error() error { return dealWithErrors(r.Err) }
+
+func (r fallbackResponse) fallback() error { return doFallback(r) }
+
 func dealWithErrors(errorReason string) error {
 	if errorReason != "" {
 		switch errorReason {
@@ -110,6 +119,13 @@ func dealWithErrors(errorReason string) error {
 		default:
 			return fmt.Errorf(errorReason)
 		}
+	}
+	return nil
+}
+
+func doFallback(fallbackMessage fallbackResponse) error {
+	if strings.Contains(fallbackMessage.UpstreamError, "no endpoints available") {
+		return errFallbackFail
 	}
 	return nil
 }

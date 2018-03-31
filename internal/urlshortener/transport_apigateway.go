@@ -57,16 +57,16 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	hystrix.ConfigureCommand("info Request", hystrix.CommandConfig{Timeout: 1000})
 
 	var retry endpoint.Endpoint
-	instancer := dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
+	instancer := dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, kitlog.NewNopLogger())
 	factory := endpointFactory(ctx, "resolver", "GET", logger, cfg)
 	endpointer := sd.NewEndpointer(instancer, factory, logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	resolverEndpoint := Hystrix("resolver Request",
 		"Service currently unavailable", logger)(retry)
-	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeRedirectResponse)).Methods("GET")
+	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, logger)
+	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, kitlog.NewNopLogger())
 	factory = endpointFactory(ctx, "info", "GET", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
@@ -75,7 +75,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 		"Service currently unavailable", logger)(retry)
 	r.Handle("/info/{shortURL}", kithttp.NewServer(infoEndpoint, decodeURLInfoRequest, encodeResponse)).Methods("GET")
 
-	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, logger)
+	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, kitlog.NewNopLogger())
 	factory = endpointFactory(ctx, "shortener", "POST", logger, cfg)
 	endpointer = sd.NewEndpointer(instancer, factory, logger)
 	balancer = lb.NewRoundRobin(endpointer)
@@ -164,8 +164,6 @@ func encodeAPIGWInfoRequest(ctx context.Context, req *http.Request, request inte
 func decodeAPIGWRedirectResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
 
 	var response redirectResponse
-	debugResponse(resp)
-	log.Printf("%+v", ctx)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}

@@ -16,12 +16,11 @@ func Hystrix(commandName string, fallbackMesg string, logger kitlog.Logger) endp
 				resp, err = next(ctx, request)
 				return err
 			}, func(err error) error {
-				logger.Log("fallbackErrorDesc", err.Error(), "RETURN", fallbackMesg)
-				resp = struct {
-					Fallback string `json:"fallback"`
-				}{
+				resp = fallbackResponse{
 					fallbackMesg,
+					err.Error(),
 				}
+				logger.Log("fallbackErrorDesc", err.Error())
 				return nil
 			}); err != nil {
 				return nil, err

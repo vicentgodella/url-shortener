@@ -83,12 +83,20 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		encodeError(ctx, e.error(), w)
 		return nil
 	}
+	if e, ok := response.(fallbacker); ok && e.fallback() != nil {
+		encodeError(ctx, e.fallback(), w)
+		return nil
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
 }
 
 type errorer interface {
 	error() error
+}
+
+type fallbacker interface {
+	fallback() error
 }
 
 // encode errors from business-logic
