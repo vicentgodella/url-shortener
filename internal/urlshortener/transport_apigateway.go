@@ -13,6 +13,7 @@ import (
 	"github.com/friends-of-scalability/url-shortener/cmd/config"
 	endpoint "github.com/go-kit/kit/endpoint"
 	sd "github.com/go-kit/kit/sd"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gorilla/mux"
 
@@ -54,6 +55,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 		encodeResponse,
 		opts...,
 	)
+	r.Path("/metrics").Handler(stdprometheus.Handler())
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 	hystrix.ConfigureCommand("shortener Request", hystrix.CommandConfig{Timeout: 100000})
 	hystrix.ConfigureCommand("resolver Request", hystrix.CommandConfig{Timeout: 1000})

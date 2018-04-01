@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
 	kitlog "github.com/go-kit/kit/log"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -47,7 +48,7 @@ func MakeResolverHandler(ctx context.Context, us Service, logger kitlog.Logger) 
 		encodeResponse,
 		opts...,
 	)
-
+	r.Path("/metrics").Handler(stdprometheus.Handler())
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 	r.Handle("/{shortURL}", URLRedirectHandler).Methods("GET")
 	r.Handle("/info/{shortURL}", URLInfoHandler).Methods("GET")

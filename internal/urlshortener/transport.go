@@ -10,6 +10,7 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 	kithttp "github.com/go-kit/kit/transport/http"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 // MakeHandler returns a handler for the urlshortener service.
@@ -67,7 +68,7 @@ func MakeHandler(ctx context.Context, us Service, logger kitlog.Logger) http.Han
 		encodeResponse,
 		opts...,
 	)
-
+	r.Path("/metrics").Handler(stdprometheus.Handler())
 	r.Handle("/", URLShortifyHandler).Methods("POST")
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
 	r.Handle("/{shortURL}", URLRedirectHandler).Methods("GET")

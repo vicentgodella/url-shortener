@@ -13,6 +13,8 @@ import (
 	"github.com/friends-of-scalability/url-shortener/cmd/config"
 	"github.com/friends-of-scalability/url-shortener/internal/urlshortener"
 	"github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -117,6 +119,20 @@ func main() {
 		ctx = context.Background()
 	}
 
+	fieldKeys := []string{"method"}
+	requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "scalability",
+		Subsystem: "url_shortener",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys)
+	requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "scalability",
+		Subsystem: "url_shortener",
+		Name:      "request_latency_microseconds",
+		Help:      "Total duration of requests in microseconds.",
+	}, fieldKeys)
+
 	var s urlshortener.Service
 	{
 		var err error
@@ -126,6 +142,7 @@ func main() {
 			os.Exit(1)
 		}
 		s = urlshortener.NewLoggingService(logger, s)
+		s = urlshortener.NewMetricsService(requestCount, requestLatency, s)
 	}
 
 	var h http.Handler

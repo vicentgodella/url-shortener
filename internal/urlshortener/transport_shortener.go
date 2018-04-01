@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
 	kitlog "github.com/go-kit/kit/log"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -41,8 +42,9 @@ func MakeShortenerHandler(ctx context.Context, us Service, logger kitlog.Logger)
 		encodeResponse,
 		opts...,
 	)
-
+	r.Path("/metrics").Handler(stdprometheus.Handler())
 	r.Handle("/", URLShortifyHandler).Methods("POST")
 	r.Handle("/healthz", URLHealthzHandler).Methods("GET")
+
 	return r
 }
