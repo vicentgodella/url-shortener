@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -ex
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 KUBE_LATEST_VERSION="v1.8.0"
 HELM_VERSION="v2.8.2"
@@ -36,7 +36,11 @@ function package_and_deploy() {
     ${HELM_PATH} package -u ${CHARTS_PATH}/url-shortener -d ${CHARTS_PATH}
     ${HELM_PATH} upgrade -i ${RELEASE_NAME} $(find ${CHARTS_PATH} -maxdepth 1 -name "*.tgz")
 }
+function deploy_prometheus_and_grafana() {
+    ${KUBECTL_PATH} apply --filename https://raw.githubusercontent.com/giantswarm/kubernetes-prometheus/master/manifests-all.yaml
+}
 
 get_kubectl
 get_helm
 package_and_deploy
+deploy_prometheus_and_grafana
