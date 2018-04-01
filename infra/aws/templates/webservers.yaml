@@ -75,9 +75,9 @@ Resources:
       - Type: forward
         TargetGroupArn: !Ref HystrixLoadBalancerTargetGroup
       Conditions:
-      - Field: path-pattern
+      - Field: host-header
         Values:
-        - "/hystrixdashboard/*"
+          - !Join [ ".", [ "hystrix", !Ref StudentId, !Ref Domain ] ]
       ListenerArn: !Ref LoadBalancerListener
       Priority: 1
 
@@ -106,11 +106,16 @@ Resources:
           FromPort: "8080"
           IpProtocol: "tcp"
           ToPort: "8080"
-       # hystrix port
+       # hystrix stream port
         - CidrIp: "10.0.0.0/8"
           FromPort: "9000"
           IpProtocol: "tcp"
           ToPort: "9000"
+      # hystrix dashboard port
+        - CidrIp: "10.0.0.0/8"
+          FromPort: "9002"
+          IpProtocol: "tcp"
+          ToPort: "9002"
       VpcId:
         Ref: "VPC"
   WebServerRole:
@@ -164,6 +169,18 @@ Resources:
        - "Fn::GetAtt": [ "LoadBalancer", "DNSName" ]
       TTL: 60
       Type: "CNAME"
+  HystrixLoadBalancerDns:
+    DependsOn: "LoadBalancer"
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      Comment: "Load Balancer"
+      HostedZoneName: !Join [ "", [ !Ref Domain, "."] ]
+      Name: !Join [ ".", [ "hystrix",!Ref StudentId, !Ref Domain ] ]
+      ResourceRecords:
+       - "Fn::GetAtt": [ "LoadBalancer", "DNSName" ]
+      TTL: 60
+      Type: "CNAME"
+
 Outputs:
   WebServerSecurityGroup:
     Description: "WebServers security group"
