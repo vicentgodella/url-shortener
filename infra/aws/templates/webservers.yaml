@@ -77,14 +77,14 @@ Resources:
       SecurityGroupIngress:
        # application port if you change the port change this!
         - CidrIp: "10.0.0.0/8"
-         FromPort: "8080"
-         IpProtocol: "tcp"
-         ToPort: "8080"
+          FromPort: "8080"
+          IpProtocol: "tcp"
+          ToPort: "8080"
        # hystrix port
-       - CidrIp: "10.0.0.0/8"
-         FromPort: "9000"
-         IpProtocol: "tcp"
-         ToPort: "9000"
+        - CidrIp: "10.0.0.0/8"
+          FromPort: "9000"
+          IpProtocol: "tcp"
+          ToPort: "9000"
       VpcId:
         Ref: "VPC"
   WebServerRole:

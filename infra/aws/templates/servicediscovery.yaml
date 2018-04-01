@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "AWS CloudFormation Service Discovery"
 Parameters:
   Name:
-    Description: "some identifier for the zone"
+    Description: "Student ID"
     Type: "String"
   VPC:
     Description: Choose which VPC this server should be deployed to
@@ -26,6 +26,13 @@ Resources:
             TTL: "30"
         NamespaceId: !Ref PrivateNamespace
       Name: resolver
+  ResolverServiceParameterStore:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Join ["/",["",!Ref Name,"prod","resolver","service"]]
+      Description: "Resolver service ID"
+      Type: String
+      Value: !Ref ResolverService
   ShortenerService:
     Type: "AWS::ServiceDiscovery::Service"
     Properties:
@@ -37,6 +44,14 @@ Resources:
             TTL: "30"
         NamespaceId: !Ref PrivateNamespace
       Name: shortener
+  ShortenerServiceParameterStore:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Join ["/",["",!Ref Name,"prod","shortener","service"]]
+      Description: "Shortener service ID"
+      Type: String
+      Value: !Ref ShortenerService
+
 Outputs:
   ResolverServiceId:
     Description: "Resolver Service ID"
