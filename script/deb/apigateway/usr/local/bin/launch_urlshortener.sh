@@ -33,7 +33,6 @@ function get_environmental_variables() {
     export URLSHORTENER_POSTGRESQL_PORT=$(get_parameter_store "/"$STUDENT"/prod/db/port" $EC2_REGION)
     export URLSHORTENER_FAKELOAD=$(get_parameter_store "/"$STUDENT"/prod/fakeload " $EC2_REGION)
     export URLSHORTENER_ROLE=$(cat /etc/urlshortener/role)
-
     export URLSHORTENER_STORAGE=$(get_parameter_store "/"$STUDENT"/prod/storage" $EC2_REGION)
     export URLSHORTENER_HTTP_ADDR=$(get_parameter_store "/"$STUDENT"/prod/http/addr" $EC2_REGION)
     export URLSHORTENER_SD_RESOLVER=$(get_parameter_store "/"$STUDENT"/prod/sd/resolver" $EC2_REGION)
