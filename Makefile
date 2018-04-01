@@ -36,6 +36,9 @@ ci: buildonly generate-package
 generate-package:
 	@echo "GENERATE PACKAGE..."
 	bash script/build-package.sh resolver
+	bash script/build-package.sh shortener
+	bash script/build-package.sh apigateway
+	bash script/build-package.sh hystrixdashboard
 
 tools:
 	@echo "GO TOOLS installation..."
