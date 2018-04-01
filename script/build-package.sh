@@ -17,7 +17,9 @@ PKG_BUILD_DIR="/tmp/rpm.${RANDOM}"; mkdir "${PKG_BUILD_DIR}"
 
 mkdir -p ${PKG_BUILD_DIR}/opt/url-shortener/bin/
 
-cp bin/urlshortener ${PKG_BUILD_DIR}/opt/url-shortener/bin/url-shortener
+if [[ "$NAME" != "hystrixdashboard" ]];then
+  cp bin/urlshortener ${PKG_BUILD_DIR}/opt/url-shortener/bin/url-shortener
+fi
 rsync -av script/deb/$1/ ${PKG_BUILD_DIR}/
 
 pushd ${WORKING_PATH}
