@@ -34,6 +34,8 @@ function get_environmental_variables() {
     export URLSHORTENER_FAKELOAD=$(get_parameter_store "/"$STUDENT"/prod/fakeload " $EC2_REGION)
     export URLSHORTENER_STORAGE=$(get_parameter_store "/"$STUDENT"/prod/storage" $EC2_REGION)
     export URLSHORTENER_HTTP_ADDR=$(get_parameter_store "/"$STUDENT"/prod/http/addr" $EC2_REGION)
+    export URLSHORTENER_SD_RESOLVER=$(get_parameter_store "/"$STUDENT"/prod/sd/resolver" $EC2_REGION)
+    export URLSHORTENER_SD_SHORTENER=$(get_parameter_store "/"$STUDENT"/prod/sd/shortener" $EC2_REGION)
 }
 
 get_dependencies
@@ -45,5 +47,7 @@ unset_if_null_or_empty "URLSHORTENER_POSRGRESQL_HOST"
 unset_if_null_or_empty "URLSHORTENER_POSTGRESQL_PORT"
 unset_if_null_or_empty "URLSHORTENER_POSTGRESQL_USER"
 unset_if_null_or_empty "URLSHORTENER_POSTGRESQL_PASSWORD"
+unset_if_null_or_empty "URLSHORTENER_SD_RESOLVER"
+unset_if_null_or_empty "URLSHORTENER_SD_SHORTENER"
 
 /opt/url-shortener/bin/url-shortener

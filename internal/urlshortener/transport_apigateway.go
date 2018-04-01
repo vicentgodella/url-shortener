@@ -66,7 +66,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	balancer := lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	resolverEndpoint := Hystrix("resolver Request",
-		"Service currently unavailable", logger)(retry)
+		"Resolver service currently unavailable", logger)(retry)
 	r.Handle("/{shortURL}", kithttp.NewServer(resolverEndpoint, decodeURLRedirectRequest, encodeRedirectResponse, opts...)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Resolver, 200*time.Millisecond, kitlog.NewNopLogger())
@@ -75,7 +75,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	infoEndpoint := Hystrix("info Request",
-		"Service currently unavailable", logger)(retry)
+		"Info service currently unavailable", logger)(retry)
 	r.Handle("/info/{shortURL}", kithttp.NewServer(infoEndpoint, decodeURLInfoRequest, encodeResponse, opts...)).Methods("GET")
 
 	instancer = dnssrv.NewInstancer(cfg.ServiceDiscovery.Shortener, 200*time.Millisecond, kitlog.NewNopLogger())
@@ -84,7 +84,7 @@ func MakeAPIGWHandler(ctx context.Context, us Service, logger kitlog.Logger, cfg
 	balancer = lb.NewRoundRobin(endpointer)
 	retry = lb.Retry(3, 500*time.Millisecond, balancer)
 	shortenerEndpoint := Hystrix("shortener Request",
-		"Service currently unavailable", logger)(retry)
+		"Shortener service currently unavailable", logger)(retry)
 	r.Handle("/", kithttp.NewServer(shortenerEndpoint, decodeURLShortenerRequest, encodeResponse, opts...)).Methods("POST")
 
 	return r
