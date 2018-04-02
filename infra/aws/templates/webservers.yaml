@@ -294,6 +294,13 @@ Resources:
        - "Fn::GetAtt": [ "LoadBalancer", "DNSName" ]
       TTL: 60
       Type: "CNAME"
+  ZipkinAddressParameterStore:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Join ["/",["",!Ref StudentId,"prod","zipkin","address"]]
+      Description: "Shortener service ID"
+      Type: String
+      Value: !Join ["",[!Ref ZipkinLoadBalancerDns,"/api/v2/spans"]]
 
 Outputs:
   WebServerSecurityGroup:
