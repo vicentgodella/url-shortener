@@ -133,6 +133,19 @@
   revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
 
 [[projects]]
+  name = "github.com/openzipkin/zipkin-go"
+  packages = [
+    ".",
+    "idgenerator",
+    "model",
+    "propagation",
+    "reporter",
+    "reporter/http"
+  ]
+  revision = "f197ec29e729f226d23370ea60f0e49b8f44ccf4"
+  version = "v0.1.0"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
@@ -238,6 +251,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4c93b56cb39feea6fe8a7918ef16c5e2bc17f80c303f8011029e858f297e456a"
+  inputs-digest = "b2cdd0eebf0169f9583253e869f6d26ed2399df66e0b237818f833fc59c897cb"
   solver-name = "gps-cdcl"
   solver-version = 1
