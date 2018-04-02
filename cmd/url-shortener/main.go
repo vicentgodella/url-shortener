@@ -178,13 +178,13 @@ func main() {
 	{
 		switch cfg.Role {
 		case "full":
-			h = urlshortener.MakeHandler(ctx, s, log.With(logger, "component", "HTTP"))
+			h = urlshortener.MakeHandler(ctx, s, log.With(logger, "component", "HTTP"), tracer)
 		case "resolver":
-			h = urlshortener.MakeResolverHandler(ctx, s, log.With(logger, "component", "HTTP"))
+			h = urlshortener.MakeResolverHandler(ctx, s, log.With(logger, "component", "HTTP"), tracer)
 		case "shortener":
-			h = urlshortener.MakeShortenerHandler(ctx, s, log.With(logger, "component", "HTTP"))
+			h = urlshortener.MakeShortenerHandler(ctx, s, log.With(logger, "component", "HTTP"), tracer)
 		case "apigateway":
-			h = urlshortener.MakeAPIGWHandler(ctx, s, log.With(logger, "component", "HTTP"), &cfg)
+			h = urlshortener.MakeAPIGWHandler(ctx, s, log.With(logger, "component", "HTTP"), &cfg, tracer)
 		}
 	}
 

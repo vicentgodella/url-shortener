@@ -58,12 +58,12 @@ func (tw *tracingMiddleware) Shortify(ctx context.Context, longURL string) (mapp
 	span := tw.tracer.StartSpan(
 		queryLabel,
 	)
-	span.Annotate(time.Now(), "query:start")
+	span.Annotate(time.Now(), "Server Receive")
 	defer func() {
 
 		span.Tag("query", query)
 		span.SetRemoteEndpoint(ep)
-		span.Annotate(time.Now(), "query:end")
+		span.Annotate(time.Now(), "Server Send")
 		span.Finish()
 	}()
 	return tw.Service.Shortify(ctx, longURL)
@@ -85,15 +85,6 @@ func (tw *tracingMiddleware) Resolve(ctx context.Context, shortURL string) (mapp
 	} else {
 		serviceHost = ""
 	}
-
-	// add interesting timed event to our span
-
-	// do the actual query...
-
-	// let's annotate the end...
-
-	// we're done with this span.
-	// retrieve the parent span from context to use as parent if available.
 	if parentSpan := zipkin.SpanFromContext(ctx); parentSpan != nil {
 		spanContext = parentSpan.Context()
 	}
@@ -106,12 +97,12 @@ func (tw *tracingMiddleware) Resolve(ctx context.Context, shortURL string) (mapp
 	span := tw.tracer.StartSpan(
 		queryLabel,
 	)
-	span.Annotate(time.Now(), "query:start")
+	span.Annotate(time.Now(), "Server Receive")
 	defer func() {
 
 		span.Tag("query", query)
 		span.SetRemoteEndpoint(ep)
-		span.Annotate(time.Now(), "query:end")
+		span.Annotate(time.Now(), "Server Send")
 		span.Finish()
 	}()
 
@@ -134,15 +125,6 @@ func (tw *tracingMiddleware) GetInfo(ctx context.Context, shortURL string) (mapp
 	} else {
 		serviceHost = ""
 	}
-
-	// add interesting timed event to our span
-
-	// do the actual query...
-
-	// let's annotate the end...
-
-	// we're done with this span.
-	// retrieve the parent span from context to use as parent if available.
 	if parentSpan := zipkin.SpanFromContext(ctx); parentSpan != nil {
 		spanContext = parentSpan.Context()
 	}
@@ -155,12 +137,12 @@ func (tw *tracingMiddleware) GetInfo(ctx context.Context, shortURL string) (mapp
 	span := tw.tracer.StartSpan(
 		queryLabel,
 	)
-	span.Annotate(time.Now(), "query:start")
+	span.Annotate(time.Now(), "Server Receive")
 	defer func() {
 
 		span.Tag("query", query)
 		span.SetRemoteEndpoint(ep)
-		span.Annotate(time.Now(), "query:end")
+		span.Annotate(time.Now(), "Server Send")
 		span.Finish()
 	}()
 	return tw.Service.GetInfo(ctx, shortURL)
