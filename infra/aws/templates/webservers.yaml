@@ -197,6 +197,16 @@ Resources:
           FromPort: "9411"
           IpProtocol: "tcp"
           ToPort: "9411"
+      # prometheus dashboard port
+        - CidrIp: "10.0.0.0/8"
+          FromPort: "9090"
+          IpProtocol: "tcp"
+          ToPort: "9090"
+      # grafana dashboard port
+        - CidrIp: "10.0.0.0/8"
+          FromPort: "3000"
+          IpProtocol: "tcp"
+          ToPort: "3000"
       VpcId:
         Ref: "VPC"
   WebServerRole:
@@ -300,7 +310,7 @@ Resources:
       Name: !Join ["/",["",!Ref StudentId,"prod","zipkin","address"]]
       Description: "Shortener service ID"
       Type: String
-      Value: !Join ["",[!Ref ZipkinLoadBalancerDns,"/api/v2/spans"]]
+      Value: !Join ["",["http://",!Ref ZipkinLoadBalancerDns,"/api/v2/spans"]]
 
 Outputs:
   WebServerSecurityGroup:

@@ -21,6 +21,7 @@ scrape_configs:
       - targets: ['fabian.alumni.friendsofscalability.com']
         labels:
           group: 'urlshortener'
+          component: 'apigateway'
 
   - job_name: 'urlshortener-resolver-and-shorteners'
     scrape_interval: 5s
